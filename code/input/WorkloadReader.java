@@ -192,6 +192,10 @@ public class WorkloadReader {
 				SqlStatement previousSqlStatement = (SqlStatement) txnBlocks.get(j);
 				// 出现循环了
 				if (previousSqlStatement.sql.equals(iterSqlStatement.sql)) {
+					// 如果循环节不完整，直接认为是错误的，丢弃
+					if (txnTrace.size() < i + txnBlocks.size() - j){
+						return null;
+					}
 					loopEndIndex = j;
 					// 构造循环结构
 
@@ -205,7 +209,6 @@ public class WorkloadReader {
 
 						loopSqls.add((SqlStatement) txnBlocks.get(k));
 						try {
-
 							txnTrace.get(i + k - j).operationID = ((SqlStatement) txnBlocks.get(k)).operationId;
 
 						}catch (Exception e){
@@ -217,7 +220,7 @@ public class WorkloadReader {
 //								}
 							System.out.println(iterSqlStatement.sql);
 							System.out.println(e);
-							System.exit(1);
+//							System.exit(1);
 						}
 
 
@@ -586,7 +589,11 @@ public class WorkloadReader {
 //			}
 
 			// 检查是否处于循环结构，构建事务块
-			txnId2txnTemplate.put(txnIdAndInstance.getKey(), buildTxnBlock(txnStatements,txnTrace));
+			List<TransactionBlock> blocks = buildTxnBlock(txnStatements,txnTrace);
+			if (blocks == null){
+				continue ;
+			}
+			txnId2txnTemplate.put(txnIdAndInstance.getKey(), blocks);
 		}
 
 //		System.out.println("*******  "+txnId2txnTemplate.size());
