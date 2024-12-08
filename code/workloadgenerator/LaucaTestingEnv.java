@@ -121,6 +121,7 @@ public class LaucaTestingEnv {
 				}
 				break;
 			case "postgresql":
+			case "kingbase":
 				oriConn = oriDBConnector.getPostgreSQLConnection();
 				laucaConn = laucaDBConnector.getPostgreSQLConnection();
 				if (Configurations.isEnableAnonymity()) {
@@ -178,15 +179,15 @@ public class LaucaTestingEnv {
 								}
 								break;
 							case "postgresql":
-								CopyManager copyManager = null;
+							case "kingbase":
+								CopyManager copyManager;
 								try {
 									copyManager = new CopyManager((BaseConnection) finalLaucaConn);
 								} catch (SQLException e) {
 									throw new RuntimeException(e);
 								}
 								try {
-									copyManager.copyIn("COPY " + tableName + " FROM stdin DELIMITER as ',';", new FileReader(new File(
-											String.valueOf(tableDataFile.getCanonicalPath()))));
+									copyManager.copyIn("COPY " + tableName.toLowerCase() + " FROM stdin DELIMITER as ',';", new FileReader(tableDataFile.getCanonicalPath()));
 								} catch (SQLException | IOException e) {
 									throw new RuntimeException(e);
 								}
@@ -223,14 +224,16 @@ public class LaucaTestingEnv {
 
 			System.out.println("数据导入成功！");
 			//建外键，UNIQUE，索引等
-			stmt.execute("SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0");
-			stmt.execute("SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0");
-			for(String cons : FKs_Indexes){
-				//System.out.println(cons);
-				stmt.execute(cons);
+			if (databaseType.equals("mysql") || databaseType.equals("tidb")){
+				stmt.execute("SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0");
+				stmt.execute("SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0");
+				for(String cons : FKs_Indexes){
+					//System.out.println(cons);
+					stmt.execute(cons);
+				}
+				stmt.execute("SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS");
+				stmt.execute("SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS");
 			}
-			stmt.execute("SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS");
-            stmt.execute("SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS");
 //			stmt.executeBatch();
 			stmt.close();
 			oriConn.close();

@@ -55,6 +55,7 @@ public class DBStatisticsCollector {
 				conn = dbConnector.getMySQLConnection();
 				break;
 			case "postgresql":
+			case "kingbase":
 				conn = dbConnector.getPostgreSQLConnection();
 				break;
 			case "oracle":

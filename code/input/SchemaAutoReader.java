@@ -22,8 +22,9 @@ public class SchemaAutoReader {
         ResultSet tablesRS = null;
         if(databaseType.equals("oracle")) {
             tablesRS = dbmd.getTables("null", username.toUpperCase(), "%", new String[]{"TABLE"});
-        }else {
-            tablesRS = dbmd.getTables(null, "%", "%", new String[] { "TABLE" });
+        }else
+        {
+            tablesRS = dbmd.getTables(null, "public", "%", new String[] { "TABLE" });
         }
         //得到所有表名
         List<String> tableNameList = new ArrayList<>();
@@ -306,6 +307,7 @@ public class SchemaAutoReader {
             case "mysql":
             case "tidb":
             case "postgresql":
+            case "kingbase":
                 if(dataType.contains("int"))
                     dataType = "integer";
                 else if(dataType.contains("float")||dataType.contains("double"))

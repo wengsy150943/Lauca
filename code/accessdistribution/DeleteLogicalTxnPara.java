@@ -103,7 +103,7 @@ public class DeleteLogicalTxnPara {
                             int paraId = Integer.parseInt(identifier.substring(identifier.lastIndexOf('_')+1));
                             for(List<TraceInfo> txnTraceList : txnTraceLists){
                                 for (TraceInfo traceInfo : txnTraceList) {
-                                    if (traceInfo.operationID == sqlId) {
+                                    if (traceInfo.operationID == sqlId && traceInfo.parameters.size() > paraId) {
                                         traceInfo.parameters.set(paraId, "#@#");
 //                                        break; //针对multiple，只考虑multiple的第一次循环，但忽略了事务内的逻辑，还是不要break
                                     }
@@ -329,7 +329,7 @@ public class DeleteLogicalTxnPara {
                     for(int traceId = 0; traceId < txnTraceList.size();traceId++){
                         if(txnTraceList.get(traceId).operationID==multiParameterSqlId){
                             multipleCount+=1;
-                            if(multipleCount != 1){
+                            if(multipleCount != 1 && txnTraceList.get(traceId).parameters.size() > multiParameterparaId ){
                                 txnTraceList.get(traceId).parameters.set(multiParameterparaId,"#@#");
                             }
                         }

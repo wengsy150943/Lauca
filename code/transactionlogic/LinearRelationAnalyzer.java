@@ -41,10 +41,6 @@ public class LinearRelationAnalyzer {
 	@SuppressWarnings("unchecked")
 	public Map<String, Coefficient> countLinearInfo(List<TransactionData> txDataList) {
 		if (txDataList == null || txDataList.size() < minTxDataSize) {
-			System.out.println(
-					"\tThe amount of transaction data is too small to support the analysis of linear relationships!"
-							+ "\n\tThe number of transaction instances is " + txDataList.size()
-							+ ", and the minTxDataSize is " + minTxDataSize + "!");
 			return null;
 		}
 
@@ -94,6 +90,8 @@ public class LinearRelationAnalyzer {
 					Object parameter2 = parameters2[j];
 					String paraIdentifier = operationId + "_para_" + j;
 
+					String commonPart = paraIdentifier + "&";
+
 					// 现在开始遍历前面操作的输入参数和返回结果集元素，以判断是否存在线性依赖关系
 					for (int k = 0; k < i; k++) {
 						// 两个事务实例在前面操作上的数据也都不能为null，不然无法计算线性关系的系数
@@ -123,14 +121,14 @@ public class LinearRelationAnalyzer {
 							if (returnItems1 == null || returnItems2 == null) {
 								for (int m = 0; m < frontReturnDataTypes.length; m++) {
 									String resultIdentifier = frontOperationId + "_result_" + m;
-									String identifierPair = paraIdentifier + "&" + resultIdentifier;
+									String identifierPair = commonPart + resultIdentifier;
 									noLinearRelation.add(identifierPair);
 									coefficientMap.remove(identifierPair);
 								}
 							} else {
 								for (int m = 0; m < frontReturnDataTypes.length; m++) {  //qly: 是对应位置的线性关系吗
 									String resultIdentifier = frontOperationId + "_result_" + m;
-									String identifierPair = paraIdentifier + "&" + resultIdentifier;
+									String identifierPair = commonPart + resultIdentifier;
 									if (noLinearRelation.contains(identifierPair)) {
 										continue;
 									} else {
@@ -149,7 +147,7 @@ public class LinearRelationAnalyzer {
 						Object[] frontParameters2 = frontOperationData2.getParameters();
 						for (int m = 0; m < frontParaDataTypes.length; m++) {
 							String frontParaIdentifier = frontOperationId + "_para_" + m;
-							String identifierPair = paraIdentifier + "&" + frontParaIdentifier;
+							String identifierPair = commonPart + frontParaIdentifier;
 							if (noLinearRelation.contains(identifierPair)) {
 								continue;
 							} else {
@@ -164,7 +162,7 @@ public class LinearRelationAnalyzer {
 					// ------ 与 当前操作 前面输入参数（同一个SQL中的参数） 之间的关系 ------
 					for (int k = 0; k < j; k++) {
 						String frontParaIdentifier = operationId + "_para_" + k;
-						String identifierPair = paraIdentifier + "&" + frontParaIdentifier;
+						String identifierPair = commonPart + frontParaIdentifier;
 						if (noLinearRelation.contains(identifierPair)) {
 							continue;
 						} else {

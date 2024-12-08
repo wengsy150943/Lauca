@@ -73,20 +73,45 @@ public class RunningLogReader {
 			List<OperationData> operationDataList = new ArrayList<>();
 			Set<Integer> operationIdSet = new HashSet<>();
 			String txName = "Transaction" + txnId2txnTemplateID.get(txnIdAndtxnTrace.getKey());
+
+			Map<Integer, OperationData> txnMap = txName2OperationId2Template.get(txName);
+			if (txnMap == null){
+				continue;
+			}
 			for (TraceInfo oneTrace : txnIdAndtxnTrace.getValue()) {
 				int operationId = oneTrace.operationID;
+				if (!txnMap.containsKey(operationId)){
+					continue;
+				}
+				OperationData data_ = txnMap.get(operationId);
+
 //				for (int i = 0; i < oneTrace.parameters.size(); ++i) {
 				try{
+					// 判断trace和data不对应，而且有一方为空的情况
+					if (data_.getParaDataTypes() == null && oneTrace.parameters != null
+							|| data_.getParaDataTypes() != null && oneTrace.parameters == null
+							|| data_.getReturnDataTypes() == null && oneTrace.results != null
+							|| data_.getReturnDataTypes() != null && oneTrace.results == null){
+						continue;
+					}
+					// 判断trace和data不对应，而且两方都不为空的情况
+					if ((data_.getParaDataTypes() != null && oneTrace.parameters != null
+							&&	data_.getParaDataTypes().length != oneTrace.parameters.size())
+							|| (data_.getReturnDataTypes() != null && oneTrace.results != null
+					 			&& data_.getReturnDataTypes().length != oneTrace.results.get(0).size())){
+						continue;
+					}
+
 					operationDataList
-							.add(txName2OperationId2Template.get(txName).get(operationId).newInstance(oneTrace));
+							.add(data_.newInstance(oneTrace));
 					operationIdSet.add(operationId);
 				}catch (Exception e){
-					e.printStackTrace();
+					System.out.println("*************start");
+					System.out.println(operationId);
 					System.out.println(txName);
 					System.out.println(txName2OperationId2Template.get(txName).get(operationId));
-					System.out.println("*************");
 					System.out.println(oneTrace);
-
+					System.out.println("*************end");
 				}
 
 //				}

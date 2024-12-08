@@ -279,7 +279,7 @@ public class AccessDistributionAnalyzer {
 			txName2ParaId2AvgRunTimes.get(entry.getKey()).put("1_0",
 					txLogicAnalyzer.getOperationId2AvgRunTimes().get(1));
 
-			BlockingQueue<String> logBlockingQueue = new ArrayBlockingQueue<>(10000);
+			BlockingQueue<String> logBlockingQueue = new ArrayBlockingQueue<>(100000);
 			LogSplitterQueueMap.put(entry.getKey(), logBlockingQueue); // qly: txname:logBlockingQueue,logBlockingQueue为引用，会在LogSplitterQueueMap中被put进数据 ~
 			new Thread(new LogSplitter(entry.getKey(), logBlockingQueue, timeWindowSize, windowDataBlockingQueues,
 					txName2StatParameters, cdl)).start();
@@ -489,16 +489,19 @@ class LogReaderForTidb implements Runnable {
 	public void run() {
 		List<Entry<Long, List<TraceInfo>>> txnIdAndtxnTraceList = new ArrayList<>(this.txnId2txnTrace.entrySet());
 		txnIdAndtxnTraceList.sort((o1, o2) -> (int)(o1.getValue().get(0).operationTS - o2.getValue().get(0).operationTS));
-
+		try {
 		for (Entry<Long, List<TraceInfo>> txnIdAndtxnTrace : txnIdAndtxnTraceList) {
-//			System.out.println("************** AFTER ********");  //qly : 顺序没问题
+//			System.out.println("************** AFTER ********:" );  //qly : 顺序没问题
+			if (!this.txnId2txnTemplateID.containsKey(txnIdAndtxnTrace.getKey())){
+				continue;
+			}
 			String txnName = "Transaction" + this.txnId2txnTemplateID.get(txnIdAndtxnTrace.getKey());
+			if (LogSplitterQueueMap.get(txnName).size() > 25000){
+				continue;
+			}
 			for (TraceInfo trace : txnIdAndtxnTrace.getValue()) {
 				String info = trace.operationTS + ";" + trace.operationID + ";";  //qly: trace.operationTS是日志时间
-				List<String> paras = trace.parameters;
-				for (String para : paras) {
-					info = info + para + ",";   //qly: info 为 事务名称; 操作id; para1, para2, ...
-				}
+				info = info + String.join(",", trace.parameters);//qly: info 为 事务名称; 操作id; para1, para2, ...
 				try {
 					LogSplitterQueueMap.get(txnName).put(info);
 				} catch (InterruptedException e) {
@@ -506,8 +509,10 @@ class LogReaderForTidb implements Runnable {
 				}
 			}
 		}
-		try {
+
 			// 通知LogSplitter线程 日志文件已读取结束
+
+
 			for (Entry<String, BlockingQueue<String>> stringBlockingQueueEntry : LogSplitterQueueMap.entrySet()) {
 				// 日志时间; 操作id和输入参数
 				stringBlockingQueueEntry.getValue().put("-1; end");
@@ -623,6 +628,7 @@ class LogSplitter implements Runnable {
 
 				long logTime = Long.parseLong(arr[0]);
 				if (logTime < 0) {// 为什么会小于0？
+					// 在异步拿log拿完之后，最后会给一个-1的标志
 					routeData(txName, currentWindowStartTime, priorWindowLog);
 					routeData(txName, currentWindowStartTime + timeWindowMillis, currentWindowLog);
 					break;
@@ -673,9 +679,9 @@ class LogSplitter implements Runnable {
 				// 过滤掉不需要统计数据访问分布的参数数据
 				//qly TODO: 目前没有根据概率过滤呢 TODO 20201222 在这里将值为 #@# 的删掉！
 				//todo: 20210127 这里删的太早了，之后还得统计呢
-//				if (paraId2DataList.containsKey(identifier) && !parameters[i].equals("#@#")) {
+				if (paraId2DataList.containsKey(identifier)) {
 					paraId2DataList.get(identifier).add(parameters[i].trim());
-//				}
+				}
 			}
 
 		}

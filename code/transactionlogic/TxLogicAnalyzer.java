@@ -28,7 +28,7 @@ public class TxLogicAnalyzer {
 	private Map<String, Map<Integer,Double>> cardinality4paraInSchema = null;
 
 	// 线性依赖关系分析时的配置参数，见LinearRelationAnalyzer
-	private int minTxDataSize = 1;
+	private int minTxDataSize = 50;
 	private int randomPairs = 10000;
 
 	public void setMinTxDataSize(int minTxDataSize) {
@@ -99,7 +99,10 @@ public class TxLogicAnalyzer {
 		if (Configurations.isLinearRelationFlag()) {
 			LinearRelationAnalyzer linearRelationAnalyzer = new LinearRelationAnalyzer(minTxDataSize, randomPairs);
 			Map<String, Coefficient> coefficientMap = linearRelationAnalyzer.countLinearInfo(txDataList);
-			linearRelationAnalyzer.constructDependency(parameterNodeMap, coefficientMap);
+			if (coefficientMap != null){
+				linearRelationAnalyzer.constructDependency(parameterNodeMap, coefficientMap);
+			}
+
 		}
 
 		// 初始化ParameterNode中的累计概率和数组~
