@@ -91,7 +91,8 @@ class DataGenerationThread implements Runnable {
 		
 		
 		// Bug fix for PostgreSQL data import (COPY command)
-		if (Configurations.getDatabaseType().toLowerCase().equals("postgresql")) {
+		String dbType = Configurations.getDatabaseType().toLowerCase();
+		if (dbType.equals("postgresql") || dbType.equals("kingbase")) {
 			sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
 		}
 		// bug fix ----------
@@ -112,9 +113,10 @@ class DataGenerationThread implements Runnable {
 				}
 				sb.append(tuple[tuple.length - 1]).append("\r\n");
 				//处理null值，导入mysql前，要将null换成\N
-				if (sb.toString().contains("null") &&
-						(Configurations.getDatabaseType().toLowerCase().equals("mysql")||Configurations.getDatabaseType().toLowerCase().equals("tidb"))){
-					bw.write(sb.toString().replace("null","\\N"));
+				if (sb.toString().contains("null") ){
+					if (!dbType.equals("Oracle")){
+						bw.write(sb.toString().replace("null","\\N"));
+					}
 				}
 				else bw.write(sb.toString());
 				sb.setLength(0);

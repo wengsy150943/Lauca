@@ -136,7 +136,7 @@ public class WorkloadGenerator {
 			String databaseType = Configurations.getDatabaseType().toLowerCase();
 			if (databaseType.equals("mysql")||databaseType.equals("tidb")) {
 				conn = dbConnector.getMySQLConnection();
-			} else if (databaseType.equals("postgresql")) {
+			} else if (databaseType.equals("postgresql") || databaseType.equals("kingbase")) {
 				conn = dbConnector.getPostgreSQLConnection();
 			} else if (databaseType.equals("oracle")) {
 				conn = dbConnector.getOracleConnection();

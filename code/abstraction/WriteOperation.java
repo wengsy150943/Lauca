@@ -108,9 +108,9 @@ public class WriteOperation extends SqlStatement {
 			}
 //			e.printStackTrace();
 //			System.err.println("ERROR!!!");
-			System.out.println("aaaaaaaa"+pstmt.toString());
-			System.out.println(this.getClass().getName());
-			System.out.println(sql);
+//			System.out.println("aaaaaaaa"+pstmt.toString());
+//			System.out.println(this.getClass().getName());
+//			System.out.println(sql);
 //			System.out.println(e.getMessage());
 ////			System.exit(1);
 			return 0;
@@ -206,9 +206,9 @@ public class WriteOperation extends SqlStatement {
 			if (e.getMessage().contains("Deadlock")) {
 				return -1;
 			}
-			System.out.println(this.getClass().getName());
-			System.out.println(sql);
-			System.out.println(e.getMessage());
+//			System.out.println(this.getClass().getName());
+//			System.out.println(sql);
+//			System.out.println(e.getMessage());
 //			System.exit(1);
 //			System.err.println("ERROR!!!");
 			return 0;
